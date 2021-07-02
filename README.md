@@ -2,6 +2,9 @@
 
 > Add cache parameter to GitHub Actions using setup-node
 
+[![@latest](https://img.shields.io/npm/v/octoherd-script-add-cache-to-node-github-action.svg)](https://www.npmjs.com/package/octoherd-script-add-cache-to-node-github-action)
+[![Build Status](https://github.com/oscard0m/octoherd-script-add-cache-to-node-github-action/workflows/Test/badge.svg)](https://github.com/oscard0m/octoherd-script-add-cache-to-node-github-action/actions?query=workflow%3ATest+branch%3Amain)
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)
