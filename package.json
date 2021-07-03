@@ -18,7 +18,10 @@
   "author": "Oscar Dominguez <dominguez.celada@gmail.com> (https://www.oscardom.dev)",
   "license": "ISC",
   "dependencies": {
-    "@octoherd/cli": "^3.3.4"
+    "@octoherd/cli": "^3.3.4",
+    "@octokit/plugin-create-or-update-text-file": "^1.0.3",
+    "prettier": "^2.3.2",
+    "yaml": "^2.0.0-6"
   },
   "devDependencies": {},
   "release": {
