@@ -92,16 +92,14 @@ export async function script(octokit, repository, { cache = "npm" }) {
       message: `ci(workflow): add '${cache}' cache for actions/setup-node in ${workflowFile.name}`,
       content: ({ exists, content }) => {
         const yamlDocument = parseDocument(content);
-        const jobs = yamlDocument.get('jobs')
+        const jobs = yamlDocument.get("jobs");
 
-        for(let i = 0; i < jobs.items.length; i++) {
-          const job = jobs.items[i].value
-          const steps = job.get('steps')
-          for(let j = 0; j <steps.items.length; j++) {
-            const step = steps.get(j)
-            const stepUses = step.get('uses')
-            const stepWith = step.get('with')
-            
+        for (const { value: job } of jobs.items) {
+          const steps = job.get("steps");
+          for (const step of steps.items) {
+            const stepUses = step.get("uses");
+            const stepWith = step.get("with");
+
             if (
               stepUses &&
               stepUses.includes("actions/setup-node") &&
