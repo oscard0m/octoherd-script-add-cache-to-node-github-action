@@ -67,6 +67,7 @@ export async function script(octokit, repository, { cache = "npm" }) {
         Buffer.from(content, encoding).toString("utf-8")
       );
       const jobs = yamlDocument.get("jobs");
+      let cacheAdded = false;
 
       for (const { value: job } of jobs.items) {
         const steps = job.get("steps");
@@ -84,30 +85,41 @@ export async function script(octokit, repository, { cache = "npm" }) {
             } else {
               stepWith.set("cache", cache);
             }
+
+            cacheAdded = true;
           }
         }
       }
 
-      return prettier.format(yamlDocument.toString(), {
-        parser: "yaml",
-      });
+      return cacheAdded
+        ? prettier.format(yamlDocument.toString(), {
+            parser: "yaml",
+          })
+        : null;
     };
   });
 
-  const { data: pr } = await composeCreatePullRequest(octokit, {
+  const prCreated = await composeCreatePullRequest(octokit, {
     owner,
     repo,
     title: "ci(workflow): add cache to workflows using actions/setup-node",
     body: "Add cache to workflows using actions/setup-node",
     base: defaultBranch,
     head: BRANCH_NAME,
+    createWhenEmpty: false,
     changes: [
       {
         files: filesToEdit,
         commit: `ci(workflow): add '${cache}' cache for actions/setup-node in ${PATH}`,
+        emptyCommit: false,
       },
     ],
   });
 
-  octokit.log.info(`Pull Request created at ${pr.html_url}`);
+  if (!prCreated) {
+    octokit.log.warn(`No Pull Request created for ${repository.full_name}`);
+    return;
+  }
+
+  octokit.log.info(`Pull Request created at ${prCreated.data.html_url}`);
 }
