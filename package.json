@@ -1,0 +1,32 @@
+{
+  "name": "octoherd-script-add-cache-to-node-github-action",
+  "version": "0.0.0-development",
+  "type": "module",
+  "exports": "./script.js",
+  "bin": {
+    "octoherd-script-add-cache-to-node-github-action": "./cli.js"
+  },
+  "description": "Add cache parameter to GitHub Actions using setup-node",
+  "scripts": {
+    "start": "node cli.js",
+    "test": "node script.js"
+  },
+  "repository": "https://github.com/oscard0m/octoherd-script-add-cache-to-node-github-action",
+  "keywords": [
+    "octoherd-script"
+  ],
+  "author": "Oscar Dominguez <dominguez.celada@gmail.com> (https://www.oscardom.dev)",
+  "license": "ISC",
+  "dependencies": {
+    "@octoherd/cli": "^3.3.4",
+    "octokit-plugin-create-pull-request": "^3.9.3",
+    "prettier": "^2.3.2",
+    "yaml": "^2.0.0-6"
+  },
+  "devDependencies": {},
+  "release": {
+    "branches": [
+      "main"
+    ]
+  }
+}
