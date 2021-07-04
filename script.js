@@ -32,6 +32,35 @@ export async function script(octokit, repository, { cache = "npm" }) {
   const repo = repository.name;
   const defaultBranch = repository.default_branch;
 
+  // Get all files from .github/workflows folder
+  let files;
+  try {
+    const { data } = await octokit.request(
+      "GET /repos/{owner}/{repo}/contents/{path}",
+      {
+        owner,
+        repo,
+        path: PATH,
+      }
+    );
+
+    files = data;
+  } catch (e) {
+    if (e.status === 404) {
+      octokit.log.warn(`"${PATH}" path not found in ${repository.full_name}`);
+      return;
+    } else {
+      throw e;
+    }
+  }
+
+  if (!Array.isArray(files)) {
+    throw new Error(`"${PATH}" is not a folder in ${repository.full_name}`);
+  }
+
+  const workflowFiles = files.filter((file) => isYamlFile(file.name));
+  let workflowsUpdated = false;
+
   // Get info on repository branches
   const { data: branches } = await octokit.request(
     "GET /repos/{owner}/{repo}/branches",
@@ -65,23 +94,6 @@ export async function script(octokit, repository, { cache = "npm" }) {
       return;
     }
   }
-
-  // Get all files from .github/workflows folder
-  const { data: files } = await octokit.request(
-    "GET /repos/{owner}/{repo}/contents/{path}",
-    {
-      owner,
-      repo,
-      path: PATH,
-    }
-  );
-
-  if (!Array.isArray(files)) {
-    throw new Error(`"${PATH}" is not a folder in ${repository.full_name}`);
-  }
-
-  const workflowFiles = files.filter((file) => isYamlFile(file.name));
-  let workflowsUpdated = false;
 
   for (const workflowFile of workflowFiles) {
     const { data, updated } = await composeCreateOrUpdateTextFile(octokit, {
