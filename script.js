@@ -105,9 +105,13 @@ export async function script(octokit, repository, { cache = "npm" }) {
             if (
               stepUses &&
               stepUses.includes("actions/setup-node") &&
-              !stepWith.get('cache')
+              (!stepWith || !stepWith.get("cache"))
             ) {
-              stepWith.set('cache', cache);
+              if (!stepWith) {
+                step.set("with", { cache });
+              } else {
+                stepWith.set("cache", cache);
+              }
             }
           }
         }
