@@ -103,7 +103,20 @@ export async function script(octokit, repository, { cache = "npm" }) {
     owner,
     repo,
     title: "ci(workflow): add cache to workflows using actions/setup-node",
-    body: "Add cache to workflows using actions/setup-node",
+    body: `## Description
+
+Add \`cache\` to workflows using \`actions/setup-node\`
+
+## Context
+
+\`setup-node\` GitHub Action just released a new option to add cache to steps using it.
+
+You can find the details here: https://github.blog/changelog/2021-07-02-github-actions-setup-node-now-supports-dependency-caching/
+
+---
+
+🤖 This PR has been generated automatically by [this octoherd script](https://github.com/oscard0m/octoherd-script-add-cache-to-node-github-action), feel free to run it in your GitHub user/org repositories! 💪🏾
+`,
     base: defaultBranch,
     head: BRANCH_NAME,
     createWhenEmpty: false,
