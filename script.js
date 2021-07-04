@@ -87,12 +87,6 @@ export async function script(octokit, repository, { cache = "npm" }) {
         sha,
       })
       .then((response) => response.data.ref);
-
-    if (!ref) {
-      octokit.log.warn(`Error creating branch in ${repository.html_url}`);
-
-      return;
-    }
   }
 
   for (const workflowFile of workflowFiles) {
