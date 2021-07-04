@@ -148,18 +148,7 @@ export async function script(octokit, repository, { cache = "npm" }) {
       }
     );
 
-    octokit.log.info(`Create Pull Request at ${pr.html_url}`);
-
-    // Add the "maintenance" label to the pull request
-    await octokit.request(
-      "POST /repos/{owner}/{repo}/issues/{issue_number}/labels",
-      {
-        owner,
-        repo,
-        issue_number: pr.number,
-        labels: ["maintenance"],
-      }
-    );
+    octokit.log.info(`Pull Request created at ${pr.html_url}`);
   } else {
     octokit.log.info("There were no workflows to update");
   }
