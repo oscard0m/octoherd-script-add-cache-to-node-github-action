@@ -2,14 +2,21 @@
 
 import { composeCreateOrUpdateTextFile } from "@octokit/plugin-create-or-update-text-file";
 import prettier from "prettier";
-import YAML from 'yaml'
+import YAML from "yaml";
 
-const { parseDocument, parse, stringify, Document } = YAML
+const { parseDocument } = YAML;
 
-const isYamlFile = (fileName) => {
-  const yamlFilePattern = /^.*\.ya?ml$/;
-  return yamlFilePattern.test(fileName);
-};
+const BRANCH_NAME = "add-cache-to-node-workflows";
+const PATH = ".github/workflows";
+
+/**
+ * Check if a filename is a YAML file
+ *
+ * @param {string} fileName FileName to be tested
+ *
+ * @return {boolean}
+ */
+const isYamlFile = (fileName) => /\.ya?ml$/.test(fileName);
 
 /**
  * Add cache parameter to GitHub Actions using setup-node
@@ -24,8 +31,6 @@ export async function script(octokit, repository, { cache = "npm" }) {
   const owner = repository.owner.login;
   const repo = repository.name;
   const defaultBranch = repository.default_branch;
-  const branchName = "add-cache-to-node-workflows";
-  const path = ".github/workflows";
 
   // Get info on repository branches
   const { data: branches } = await octokit.request(
@@ -41,7 +46,7 @@ export async function script(octokit, repository, { cache = "npm" }) {
   const sha = branches
     .filter((branch) => branch.name === defaultBranch)
     .map((branch) => branch.commit.sha)[0];
-  const branchExists = branches.some((branch) => branch.name === branchName);
+  const branchExists = branches.some((branch) => branch.name === BRANCH_NAME);
 
   // Create branch if not present
   if (!branchExists) {
@@ -49,7 +54,7 @@ export async function script(octokit, repository, { cache = "npm" }) {
       .request("POST /repos/{owner}/{repo}/git/refs", {
         owner,
         repo,
-        ref: `refs/heads/${branchName}`,
+        ref: `refs/heads/${BRANCH_NAME}`,
         sha,
       })
       .then((response) => response.data.ref);
@@ -67,12 +72,12 @@ export async function script(octokit, repository, { cache = "npm" }) {
     {
       owner,
       repo,
-      path,
+      path: PATH,
     }
   );
 
   if (!Array.isArray(files)) {
-    throw new Error("The path is not a folder"); //TODO
+    throw new Error(`"${PATH}" is not a folder in ${repository.full_name}`);
   }
 
   const workflowFiles = files.filter((file) => isYamlFile(file.name));
@@ -83,7 +88,7 @@ export async function script(octokit, repository, { cache = "npm" }) {
       owner,
       repo,
       path: workflowFile.path,
-      branch: branchName,
+      branch: BRANCH_NAME,
       message: `ci(workflow): add '${cache}' cache for actions/setup-node in ${workflowFile.name}`,
       content: ({ exists, content }) => {
         const yamlDocument = parseDocument(content);
@@ -105,20 +110,17 @@ export async function script(octokit, repository, { cache = "npm" }) {
               stepWith.set('cache', cache);
             }
           }
-        };
+        }
 
-        return prettier.format(
-          yamlDocument.toString(),
-          {
-            parser: "yaml",
-          }
-        );
+        return prettier.format(yamlDocument.toString(), {
+          parser: "yaml",
+        });
       },
     });
 
     if (updated) {
       octokit.log.info(
-        `${path} updated in ${repository.html_url} via ${data.commit.html_url}`
+        `${PATH} updated in ${repository.html_url} via ${data.commit.html_url}`
       );
 
       workflowsUpdated = true;
@@ -136,7 +138,7 @@ export async function script(octokit, repository, { cache = "npm" }) {
       {
         owner,
         repo,
-        head: branchName,
+        head: BRANCH_NAME,
         base: defaultBranch,
         title: "ci(workflow): add cache to workflows using actions/setup-node",
       }
