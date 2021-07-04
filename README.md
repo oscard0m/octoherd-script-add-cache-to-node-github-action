@@ -18,8 +18,7 @@ Pass all options as CLI flags to avoid user prompts
 ```js
 npx octoherd-script-add-cache-to-node-github-action \
   -T ghp_0123456789abcdefghjklmnopqrstuvwxyzA \
-  -R "oscard0m/*" \
-  --cache "npm" | "yarn"
+  -R "oscard0m/*"
 ```
 
 ## Options
