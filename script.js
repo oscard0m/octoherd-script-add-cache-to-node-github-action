@@ -1,6 +1,6 @@
 // @ts-check
 
-import { composeCreateOrUpdateTextFile } from "@octokit/plugin-create-or-update-text-file";
+import { composeCreatePullRequest } from "octokit-plugin-create-pull-request";
 import prettier from "prettier";
 import YAML from "yaml";
 
@@ -59,101 +59,55 @@ export async function script(octokit, repository, { cache = "npm" }) {
   }
 
   const workflowFiles = files.filter((file) => isYamlFile(file.name));
-  let workflowsUpdated = false;
+  const filesToEdit = {};
 
-  // Get info on repository branches
-  const { data: branches } = await octokit.request(
-    "GET /repos/{owner}/{repo}/branches",
-    {
-      owner,
-      repo,
-      branch: defaultBranch,
-    }
-  );
+  workflowFiles.forEach((element) => {
+    filesToEdit[element.path] = ({ content, encoding }) => {
+      const yamlDocument = parseDocument(
+        Buffer.from(content, encoding).toString("utf-8")
+      );
+      const jobs = yamlDocument.get("jobs");
 
-  // Get SHA of repository's default branch
-  const sha = branches
-    .filter((branch) => branch.name === defaultBranch)
-    .map((branch) => branch.commit.sha)[0];
-  const branchExists = branches.some((branch) => branch.name === BRANCH_NAME);
+      for (const { value: job } of jobs.items) {
+        const steps = job.get("steps");
+        for (const step of steps.items) {
+          const stepUses = step.get("uses");
+          const stepWith = step.get("with");
 
-  // Create branch if not present
-  if (!branchExists) {
-    const ref = await octokit
-      .request("POST /repos/{owner}/{repo}/git/refs", {
-        owner,
-        repo,
-        ref: `refs/heads/${BRANCH_NAME}`,
-        sha,
-      })
-      .then((response) => response.data.ref);
-  }
-
-  for (const workflowFile of workflowFiles) {
-    const { data, updated } = await composeCreateOrUpdateTextFile(octokit, {
-      owner,
-      repo,
-      path: workflowFile.path,
-      branch: BRANCH_NAME,
-      message: `ci(workflow): add '${cache}' cache for actions/setup-node in ${workflowFile.name}`,
-      content: ({ exists, content }) => {
-        const yamlDocument = parseDocument(content);
-        const jobs = yamlDocument.get("jobs");
-
-        for (const { value: job } of jobs.items) {
-          const steps = job.get("steps");
-          for (const step of steps.items) {
-            const stepUses = step.get("uses");
-            const stepWith = step.get("with");
-
-            if (
-              stepUses &&
-              stepUses.includes("actions/setup-node") &&
-              (!stepWith || !stepWith.get("cache"))
-            ) {
-              if (!stepWith) {
-                step.set("with", { cache });
-              } else {
-                stepWith.set("cache", cache);
-              }
+          if (
+            stepUses &&
+            stepUses.includes("actions/setup-node") &&
+            (!stepWith || !stepWith.get("cache"))
+          ) {
+            if (!stepWith) {
+              step.set("with", { cache });
+            } else {
+              stepWith.set("cache", cache);
             }
           }
         }
-
-        return prettier.format(yamlDocument.toString(), {
-          parser: "yaml",
-        });
-      },
-    });
-
-    if (updated) {
-      octokit.log.info(
-        `${PATH} updated in ${repository.html_url} via ${data.commit.html_url}`
-      );
-
-      workflowsUpdated = true;
-    }
-  }
-
-  if (workflowsUpdated) {
-    //
-    // Pull Request
-    //
-
-    // Create pull request
-    const { data: pr } = await octokit.request(
-      "POST /repos/{owner}/{repo}/pulls",
-      {
-        owner,
-        repo,
-        head: BRANCH_NAME,
-        base: defaultBranch,
-        title: "ci(workflow): add cache to workflows using actions/setup-node",
       }
-    );
 
-    octokit.log.info(`Pull Request created at ${pr.html_url}`);
-  } else {
-    octokit.log.info("There were no workflows to update");
-  }
+      return prettier.format(yamlDocument.toString(), {
+        parser: "yaml",
+      });
+    };
+  });
+
+  const { data: pr } = await composeCreatePullRequest(octokit, {
+    owner,
+    repo,
+    title: "ci(workflow): add cache to workflows using actions/setup-node",
+    body: "Add cache to workflows using actions/setup-node",
+    base: defaultBranch,
+    head: BRANCH_NAME,
+    changes: [
+      {
+        files: filesToEdit,
+        commit: `ci(workflow): add '${cache}' cache for actions/setup-node in ${PATH}`,
+      },
+    ],
+  });
+
+  octokit.log.info(`Pull Request created at ${pr.html_url}`);
 }
