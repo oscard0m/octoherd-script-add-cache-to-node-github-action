@@ -27,6 +27,11 @@ const isYamlFile = (fileName) => /\.ya?ml$/.test(fileName);
  * @param {string} [options.cache] Select which package manager you want to use for caching
  */
 export async function script(octokit, repository, { cache = "npm" }) {
+  if (repository.archived) {
+    octokit.log.info(`${repository.html_url} is archived, ignoring.`);
+    return;
+  }
+
   // Global variables used throughout the code
   const owner = repository.owner.login;
   const repo = repository.name;
