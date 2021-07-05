@@ -86,6 +86,10 @@ export async function script(octokit, repository, { cache = "npm" }) {
               stepWith.set("cache", cache);
             }
 
+            if (stepUses === "actions/setup-node@v1") {
+              step.set("uses", "actions/setup-node@v2");
+            }
+
             cacheAdded = true;
           }
         }
