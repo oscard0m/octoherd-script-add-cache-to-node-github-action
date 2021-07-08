@@ -3,6 +3,9 @@ import prettier from "prettier";
 
 const { parseDocument } = YAML;
 
+const usesBahmutovNpmInstall = (hasCache, stepUses) =>
+  hasCache && stepUses && stepUses.includes("bahmutov/npm-install");
+
 /**
  * @param {string} cache
  *
@@ -27,11 +30,15 @@ export function getAddCacheToSetupNodeFunction(cache) {
 
     for (const { value: job } of jobs.items) {
       const steps = job.get("steps");
+      let jobHasCache = false;
       for (const step of steps.items) {
         const stepUses = step.get("uses");
         const stepWith = step.get("with");
 
-        if (
+        if (usesBahmutovNpmInstall(jobHasCache, stepUses)) {
+          step.set("run", "npm ci");
+          step.delete("uses")
+        } else if (
           stepUses &&
           stepUses.includes("actions/setup-node") &&
           (!stepWith || !stepWith.get("cache"))
@@ -47,13 +54,15 @@ export function getAddCacheToSetupNodeFunction(cache) {
           }
 
           cacheAdded = true;
+          jobHasCache = true;
         }
       }
     }
 
-    return cacheAdded ? prettier.format(
-		yamlDocument.toString({lineWidth: 0}), {
-			parser: 'yaml'
-		}) : null;
+    return cacheAdded
+      ? prettier.format(yamlDocument.toString({ lineWidth: 0 }), {
+          parser: "yaml",
+        })
+      : null;
   };
 }
