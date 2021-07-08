@@ -1,10 +1,7 @@
 // @ts-check
 
 import { composeCreatePullRequest } from "octokit-plugin-create-pull-request";
-import prettier from "prettier";
-import YAML from "yaml";
-
-const { parseDocument } = YAML;
+import { getAddCacheToSetupNodeFunction } from "./utils/yaml-parser";
 
 const BRANCH_NAME = "add-cache-to-node-workflows";
 const PATH = ".github/workflows";
@@ -67,45 +64,7 @@ export async function script(octokit, repository, { cache = "npm" }) {
   const filesToEdit = {};
 
   workflowFiles.forEach((element) => {
-    filesToEdit[element.path] = ({ content, encoding }) => {
-      const yamlDocument = parseDocument(
-        Buffer.from(content, encoding).toString("utf-8")
-      );
-      const jobs = yamlDocument.get("jobs");
-      let cacheAdded = false;
-
-      for (const { value: job } of jobs.items) {
-        const steps = job.get("steps");
-        for (const step of steps.items) {
-          const stepUses = step.get("uses");
-          const stepWith = step.get("with");
-
-          if (
-            stepUses &&
-            stepUses.includes("actions/setup-node") &&
-            (!stepWith || !stepWith.get("cache"))
-          ) {
-            if (!stepWith) {
-              step.set("with", { cache });
-            } else {
-              stepWith.set("cache", cache);
-            }
-
-            if (stepUses === "actions/setup-node@v1") {
-              step.set("uses", "actions/setup-node@v2");
-            }
-
-            cacheAdded = true;
-          }
-        }
-      }
-
-      return cacheAdded
-        ? prettier.format(yamlDocument.toString(), {
-            parser: "yaml",
-          })
-        : null;
-    };
+    filesToEdit[element.path] = getAddCacheToSetupNodeFunction(cache)
   });
 
   const prCreated = await composeCreatePullRequest(octokit, {
