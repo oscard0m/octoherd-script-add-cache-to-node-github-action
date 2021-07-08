@@ -9,7 +9,7 @@
   "description": "Add cache parameter to GitHub Actions using setup-node",
   "scripts": {
     "start": "node cli.js",
-    "test": "node script.js"
+    "test": "uvu tests"
   },
   "repository": "https://github.com/oscard0m/octoherd-script-add-cache-to-node-github-action",
   "keywords": [
@@ -23,7 +23,10 @@
     "prettier": "^2.3.2",
     "yaml": "^2.0.0-6"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "esm": "^3.2.25",
+    "uvu": "^0.5.1"
+  },
   "release": {
     "branches": [
       "main"
