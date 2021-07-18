@@ -1,7 +1,7 @@
 // @ts-check
 
 import { composeCreatePullRequest } from "octokit-plugin-create-pull-request";
-import { getAddCacheToSetupNodeFunction } from "./utils/yaml-parser";
+import { getAddCacheToSetupNodeFunction } from "./utils/yaml-parser.js";
 
 const BRANCH_NAME = "add-cache-to-node-workflows";
 const PATH = ".github/workflows";
