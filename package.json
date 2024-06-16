@@ -26,10 +26,5 @@
   "devDependencies": {
     "esm": "^3.2.25",
     "uvu": "^0.5.1"
-  },
-  "release": {
-    "branches": [
-      "main"
-    ]
   }
 }
