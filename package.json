@@ -20,7 +20,7 @@
   "dependencies": {
     "@octoherd/cli": "^5.0.0",
     "octokit-plugin-create-pull-request": "^6.0.0",
-    "prettier": "^2.3.2",
+    "prettier": "^3.0.0",
     "yaml": "^2.0.0-6"
   },
   "devDependencies": {
